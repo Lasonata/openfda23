@@ -1,0 +1,7 @@
+print("hello from PyCharm")
+print("hello from PyCharm")
+print("hello from PyCharm")
+print("hello from PyCharm")
+print("hello from PyCharm")
+print("hello from PyCharm")
+print("hello from PyCharm")
