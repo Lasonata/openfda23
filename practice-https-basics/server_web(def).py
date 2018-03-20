@@ -43,4 +43,4 @@ try:
         process_client(clientsocket)
 
 except socket.error:
-    print("Problemas using port %i. Do you have permission?" % PORT)
+    print("Problems using port %i. Do you have permission?" % PORT)
