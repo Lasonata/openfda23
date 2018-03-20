@@ -14,5 +14,5 @@ repos = json.loads(repos_raw)
 
 
 print("The id is:", repos['results'][0]["id"]) # enter dictionary {} inside another dictionary
-print("The purpose is.", repos['results'][0]["purpose"])
+print("The purpose is:", repos['results'][0]["purpose"])
 print("The purpose is:", repos['results'][0]["openfda"]["manufacturer_name"])
