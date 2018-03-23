@@ -15,6 +15,6 @@ repos = json.loads(repos_raw)
 print("the number of repositories is:", len(repos))
 
 for i in range(len(repos)):
-    repo = repos[i] # enter list []
-    print("The owner of the repository number", i + 1, "is:", repo['full_name']) # enter dictionary {} inside another dictionary
+    repo = repos[i] # enter every list in repos
+    print("The owner of the repository number", i + 1, "is:", repo['full_name'])
 
