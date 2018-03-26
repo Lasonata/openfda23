@@ -7,12 +7,11 @@ PORT = 8092
 MAX_OPEN_REQUESTS = 5
 
 
-
 def process_client(clientsocket):
     print(clientsocket)
     print(clientsocket.recv(1024))
     with open("html_file.html", 'r') as f:
-	    website = f.read()
+        website = f.read()
     web_contents = website
     web_headers = "HTTP/1.1 200"
     web_headers += "\n" + "Content-Type: text/html"
@@ -21,13 +20,13 @@ def process_client(clientsocket):
     clientsocket.close()
 
 
-
 # create an INET, STREAMing socket
 serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # bind the socket to a public host, and a well-known port
 hostname = socket.gethostname()
 # Let's use better the local interface name
-hostname = "10.10.107.28"
+hostname = "192.168.1.109"
+
 try:
     serversocket.bind((hostname, PORT))
     # become a server socket
@@ -36,7 +35,7 @@ try:
 
     while True:
         # accept connections from outside
-        print ("Waiting for connections at %s %i" % (hostname, PORT))
+        print("Waiting for connections at %s %i" % (hostname, PORT))
         (clientsocket, address) = serversocket.accept()
         # now do something with the clientsocket
         # in this case, we'll pretend this is a non threaded server
