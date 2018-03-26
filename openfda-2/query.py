@@ -12,10 +12,9 @@ conn.close()
 
 repos = json.loads(repos_raw)
 
-for i in range(len((repos['results']))):
-    if repos['results'][i]["openfda"] != "":
-         print("The manufacturer is:", repos['results'][i]["openfda"]["manufacturer_name"])
-    else:
-        print('not found')
 
-#print("The manufacturer is:", repos['results'][2]["openfda"]["manufacturer_name"])
+for i in range(len((repos['results']))):
+    try:
+         print("The manufacturer is:", repos['results'][i]["openfda"]["manufacturer_name"])
+    except KeyError:
+        continue
