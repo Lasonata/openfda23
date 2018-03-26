@@ -3,7 +3,7 @@ import socket
 
 # Server configuration
 IP = "127.0.0.1"
-PORT = 9007
+PORT = 9008
 MAX_OPEN_REQUESTS = 5
 
 
@@ -35,10 +35,10 @@ def process_client(clientsocket):
     print("")
 
     # Read the html page to send, depending on the path
-    if path == "/":
+    if path == "/question":
         filename = "html_file.html"
     else:
-        if path == "/new":
+        if path == "/answer":
             filename = "html_file_2.html"
         else:
             filename = "error.html"
