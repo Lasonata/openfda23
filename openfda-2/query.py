@@ -15,6 +15,6 @@ repos = json.loads(repos_raw)
 
 for i in range(len((repos['results']))):
     try:
-         print("The manufacturer is:", repos['results'][i]["openfda"]["manufacturer_name"])
+         print("The manufacturers are:", repos['results'][i]["openfda"]["manufacturer_name"])
     except KeyError:
         continue
