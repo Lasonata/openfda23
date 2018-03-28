@@ -1,8 +1,9 @@
 # A simple web server using sockets
 import socket
+import datetime
 
 # Server configuration
-IP = "127.0.0.1"
+IP = "192.168.1.109" # remember to change also link in html_file.html # before: 127.0.0.1
 PORT = 9008
 MAX_OPEN_REQUESTS = 5
 
@@ -15,37 +16,40 @@ def process_client(clientsocket):
 
     # Read the request message. It comes from the socket
     # What are received are bytes. We will decode them into an UTF-8 string
-    request_msg = clientsocket.recv(1024).decode("utf-8")
+    request_msg = clientsocket.recv(1024).decode("utf-8") # recieves up to 1024 bites and decodes them for sintax reading
 
     # Split the message into lines and remove the \r character
-    request_msg = request_msg.replace("\r", "").split("\n")
+    request_msg = request_msg.replace("\r", "").split("\n") # here the client especify its request
 
     # Get the request line
-    request_line = request_msg[0]
+    request_line = request_msg[0] # # here we leave only the first line of client request
 
     # Break the request line into its components
     request = request_line.split(" ")
 
     # Get the two component we need: request cmd and path
-    req_cmd = request[0]
-    path = request[1]
-
-    print("")
-    print("REQUEST: ")
-    print("Command: {}".format(req_cmd))
-    print("Path: {}".format(path))
-    print("")
+    try: # in case path = request[1] causes: <<IndexError: list index out of range>>
+        req_cmd = request[0] # GET
+        path = request[1] # after slash (/) --> cient especific request
+        print("")
+        print("REQUEST: ")
+        print("Command: {}".format(req_cmd))
+        print("Path: {}".format(path))
+        print("Time: ", datetime.datetime.now())
+        print("")
+    except IndexError:
+        print('ERROR: path not found')
 
     headers = {'User-Agent': 'http-client'}
 
-    conn = http.client.HTTPSConnection("api.fda.gov")
-    conn.request("GET", "/drug/label.json?limit=10", None, headers)
+    conn = http.client.HTTPSConnection("api.fda.gov") # main page we search
+    conn.request("GET", "/drug/label.json?limit=10", None, headers) # specific page we search
     r1 = conn.getresponse()
     print(r1.status, r1.reason)
     repos_raw = r1.read().decode("utf-8")
     conn.close()
 
-    repos = json.loads(repos_raw)
+    repos = json.loads(repos_raw) # web page info for sintax reading
 
     # let's try to write them down in an html file
     table_file = open('html_file_2.html', 'w')
@@ -53,25 +57,27 @@ def process_client(clientsocket):
     for i in range(len(repos['results'])):
         drug = repos['results'][i]["id"]
         table_file.write('\n<li>')
-        table_file.write(' id is:: ')
+        table_file.write(' id is: ')
         table_file.write(drug)
         table_file.write('</li>')  # this will be removed when \n error is fixed
     table_file.write('</ol><h3>Thank you, come again</h3> \n <img src="http://www.konbini.com/en/files/2017/08/apu-feat.jpg" alt="Sad"></head></html>')
     table_file.close()
 
-    # Read the html page to send, depending on the path
+    # Read the html page to send, depends on the path
     if path == "/":
         filename = "html_file.html"
+        print('html file requested: html_file.html')
+    elif path == "/10drugs":
+        filename = "html_file_2.html"
+        print('html file requested: html_file_2.html')
     else:
-        if path == "/10drugs":
-            filename = "html_file_2.html"
-        else:
-            filename = "error.html"
+        filename = "error.html"
+        print('html file requested does not exist')
 
     print("File to send: {}".format(filename))
 
-    with open(filename, "r") as f:
-        content = f.read()
+    with open(filename, "r") as f: # opening especified html file
+        content = f.read() #storing in content
 
     # Build the HTTP response message. It has the following lines
     # Status line
@@ -126,4 +132,4 @@ try:
 
 except socket.error:
     print("Socket error. Problemas with the PORT {}".format(PORT))
-    print("Launch it again in another port (and check the IP)")
+    print("Compruebe la IP y el puerto")
