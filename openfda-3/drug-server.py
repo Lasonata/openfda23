@@ -37,9 +37,10 @@ def process_client(clientsocket):
         print("Path: {}".format(path))
         print("Time: ", datetime.datetime.now())
         print("")
-    except IndexError:
-        print('ERROR: path not found')
-
+    except IndexError: # this was made to solve a recurrent error in which the path was empty and so, request[1] caused an index error
+        print('ERROR: path not found') # just an error message: code will not work anyways
+        path = 'error' # we assign anythin to path so that it doesnt rise an error and the html file returned is error.html
+        print('NOTE: path automatically assigned to error.html file as default')
     headers = {'User-Agent': 'http-client'}
 
     conn = http.client.HTTPSConnection("api.fda.gov") # main page we search
@@ -60,7 +61,7 @@ def process_client(clientsocket):
         table_file.write(' id is: ')
         table_file.write(drug)
         table_file.write('</li>')  # this will be removed when \n error is fixed
-    table_file.write('</ol><h3>Thank you, come again</h3> \n <img src="http://www.konbini.com/en/files/2017/08/apu-feat.jpg" alt="Sad"></head></html>')
+    table_file.write('</ol><h3>Thank you, come again</h3> \n <img src="http://www.konbini.com/en/files/2017/08/apu-feat.jpg" alt="Sad"><p><a href="http://192.168.1.109:9008/">Back to Main Page</a></p></head></html>')
     table_file.close()
 
     # Read the html page to send, depends on the path
