@@ -39,7 +39,7 @@ def process_client(clientsocket):
         print("")
     except IndexError: # this was made to solve a recurrent error in which the path was empty and so, request[1] caused an index error
         print('ERROR: path not found') # just an error message: code will not work anyways
-        path = 'error' # we assign anythin to path so that it doesnt rise an error and the html file returned is error.html
+        path = 'error' # we assign any string to path variable so that our code doesn't rise an error and the html file to return is error.html
         print('NOTE: path automatically assigned to error.html file as default')
     headers = {'User-Agent': 'http-client'}
 
