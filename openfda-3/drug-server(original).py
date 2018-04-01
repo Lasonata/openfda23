@@ -51,11 +51,14 @@ def process_client(clientsocket):
     table_file = open('html_file_2.html', 'w')
     table_file.write('<html><head><h1>Here you are:</h1><body style="background-color: yellow">\n<ol>')
     for i in range(len(repos['results'])):
-        drug = repos['results'][i]["id"]
-        table_file.write('\n<li>')
-        table_file.write(' id is:: ')
-        table_file.write(drug)
-        table_file.write('</li>')  # this will be removed when \n error is fixed
+        try:
+            drug = repos['results'][i]["openfda"]["generic_name"][0]
+            table_file.write('\n<li>')
+            table_file.write(' generic name is: ')
+            table_file.write(drug)
+            table_file.write('</li>')  # this will be removed when \n error is fixed
+        except KeyError:
+            continue
     table_file.write('</ol><h3>Thank you, come again</h3> \n <img src="http://www.konbini.com/en/files/2017/08/apu-feat.jpg" alt="Sad"><p><a href="http://127.0.0.1:9008/">Back to Main Page</a></p></head></html>')
     table_file.close()
 
