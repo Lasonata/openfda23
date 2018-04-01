@@ -61,7 +61,7 @@ def process_client(clientsocket):
             table_file.write('\n<li>')
             table_file.write(' generic name is: ')
             table_file.write(drug)
-            table_file.write('</li>')  # this will be removed when \n error is fixed
+            table_file.write('</li>') 
         except KeyError:
             continue
     table_file.write('</ol><h3>Thank you, come again</h3> \n <img src="http://www.konbini.com/en/files/2017/08/apu-feat.jpg" alt="Sad"><p><a href="http://192.168.1.109:9008/">Back to Main Page</a></p></head></html>')
