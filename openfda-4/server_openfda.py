@@ -1,13 +1,45 @@
 # A simple web server using sockets
 import socket
+import http.client
+import json
 
 # Server configuration
-IP = "127.0.0.1"
+current_ip = "10.3.53.82" #"localhost"
+IP = current_ip # "127.0.0.1"
 PORT = 9008
 MAX_OPEN_REQUESTS = 5
 
-import http.client
-import json
+def open_fda(drug, limit):
+
+    headers = {'User-Agent': 'http-client'}
+
+    conn = http.client.HTTPSConnection("api.fda.gov")
+    conn.request("GET", "/drug/label.json?search=active_ingredient:%s&limit=%s" % (drug,limit), None, headers)
+    r1 = conn.getresponse()
+    print(r1.status, r1.reason)
+    repos_raw = r1.read().decode("utf-8")
+    conn.close()
+
+    repos = json.loads(repos_raw)
+
+    for i in range(len(repos['results'])):
+        print("The id is:", repos['results'][i]["id"])
+
+    with open("fda_info_tobesent.html", "w") as f:
+        f.write('<html><head><h1>Here you are:</h1><body style="background-color: yellow">\n<ol>')
+        for i in range(len(repos['results'])):
+            try:
+                drug = repos['results'][i]["openfda"]["generic_name"][0]
+                f.write('\n<li>')
+                f.write(' generic name is: ')
+                f.write(drug)
+                f.write('</li>')  # this will be removed when \n error is fixed
+            except KeyError:
+                continue
+        f.write(
+            '</ol><h3>Thank you, come again</h3> \n <img src="http://www.konbini.com/en/files/2017/08/apu-feat.jpg" alt="Sad"><p><a href="http://127.0.0.1:9008/">Back to Main Page</a></p></head></html>')
+        f.close()
+
 
 def process_client(clientsocket):
     """Function for attending the client. It reads their request message and
@@ -27,49 +59,31 @@ def process_client(clientsocket):
     request = request_line.split(" ")
 
     # Get the two component we need: request cmd and path
-    req_cmd = request[0]
-    path = request[1]
+    try:
+        req_cmd = request[0]
+        path = request[1]
 
-    print("")
-    print("REQUEST: ")
-    print("Command: {}".format(req_cmd))
-    print("Path: {}".format(path))
-    print("")
+        print("")
+        print("REQUEST:", request_msg)
+        print("Command: {}".format(req_cmd))
+        print("Path: {}".format(path))
+        print("")
+    except IndexError:
+        path = "error"
 
-    headers = {'User-Agent': 'http-client'}
-
-    conn = http.client.HTTPSConnection("api.fda.gov")
-    conn.request("GET", "/drug/label.json?limit=10", None, headers)
-    r1 = conn.getresponse()
-    print(r1.status, r1.reason)
-    repos_raw = r1.read().decode("utf-8")
-    conn.close()
-
-    repos = json.loads(repos_raw)
-
-    # let's try to write them down in an html file
-    table_file = open('html_file_2.html', 'w')
-    table_file.write('<html><head><h1>Here you are:</h1><body style="background-color: yellow">\n<ol>')
-    for i in range(len(repos['results'])):
-        try:
-            drug = repos['results'][i]["openfda"]["generic_name"][0]
-            table_file.write('\n<li>')
-            table_file.write(' generic name is: ')
-            table_file.write(drug)
-            table_file.write('</li>')  # this will be removed when \n error is fixed
-        except KeyError:
-            continue
-    table_file.write('</ol><h3>Thank you, come again</h3> \n <img src="http://www.konbini.com/en/files/2017/08/apu-feat.jpg" alt="Sad"><p><a href="http://127.0.0.1:9008/">Back to Main Page</a></p></head></html>')
-    table_file.close()
-
-    # Read the html page to send, depending on the path
+    # chooses the html page to send, depending on the path
     if path == "/":
-        filename = "html_file.html"
-    else:
-        if path == "/10drugs":
-            filename = "html_file_2.html"
-        else:
-            filename = "error.html"
+        filename = "search.html"
+    elif path.find('drug') != -1 : # let´s try to find a drug and a limit entered by user
+        print("---------", path.find('drug'))
+        drugloc = path.find('drug')  # finds drug location
+        limitloc = path.find('limit')  # finds limit location
+        drug = path[drugloc + 5:limitloc - 1]  # drug entered by client
+        limit = path[limitloc + 6:] # limit entered by client
+        print("The user asked for %s and especified a limit of %s" % (drug, limit))
+        filename = "error.htmal" # this just provisional
+        open_fda(drug, limit)
+        filename = "fda_info_tobesent.html"
 
     print("File to send: {}".format(filename))
 
@@ -92,7 +106,6 @@ def process_client(clientsocket):
     # -- Busild the message by joining together all the parts
     response_msg = str.encode(status_line + header + "\n" + content)
     clientsocket.send(response_msg)
-
 
 # -----------------------------------------------
 # ------ The server start its executiong here
