@@ -4,7 +4,7 @@ import http.client
 import json
 
 # Server configuration
-current_ip = "10.3.53.82" #"localhost"
+current_ip = "localhost"
 IP = current_ip # "127.0.0.1"
 PORT = 9008
 MAX_OPEN_REQUESTS = 5
@@ -26,7 +26,7 @@ def open_fda(drug, limit):
         print("The id is:", repos['results'][i]["id"])
 
     with open("fda_info_tobesent.html", "w") as f:
-        f.write('<html><head><h1>Here you are:</h1><body style="background-color: yellow">\n<ol>')
+        f.write('<html><head><h1>Here you are:<title>Kwik-E-Mart</title></h1><body style="background-color: yellow">\n<ol>')
         for i in range(len(repos['results'])):
             try:
                 drug = repos['results'][i]["openfda"]["generic_name"][0]
@@ -37,7 +37,7 @@ def open_fda(drug, limit):
             except KeyError:
                 continue
         f.write(
-            '</ol><h3>Thank you, come again</h3> \n <img src="http://www.konbini.com/en/files/2017/08/apu-feat.jpg" alt="Sad"><p><a href="http://127.0.0.1:9008/">Back to Main Page</a></p></head></html>')
+            '</ol><h3>Thank you, come again</h3> \n <img src="http://www.konbini.com/en/files/2017/08/apu-feat.jpg" alt="Apu Nahasapeemapetilon"><p><a href="http://%s:%s/">Back to Main Page</a></p></head></html>' %(current_ip, PORT))
         f.close()
 
 
@@ -69,21 +69,26 @@ def process_client(clientsocket):
         print("Path: {}".format(path))
         print("")
     except IndexError:
-        path = "error"
+        filename = "error.html"
+        path = "error: not found... html file to send automatically set to error.html"
 
     # chooses the html page to send, depending on the path
-    if path == "/":
+    if path.find('drug') != -1 : # let´s try to find a drug and a limit entered by user
+        try:
+            #print("---------", path.find('drug')) # this a check point
+            drugloc = path.find('drug')  # finds drug location
+            limitloc = path.find('limit')  # finds limit location
+            drug = path[drugloc + 5:limitloc - 1]  # drug entered by client
+            limit = path[limitloc + 6:] # limit entered by client
+            print("The user asked for %s and especified a limit of %s" % (drug, limit))
+            open_fda(drug, limit)
+            filename = "fda_info_tobesent.html"
+        except KeyError:
+            filename = "error.html"
+    elif path == "/" :
         filename = "search.html"
-    elif path.find('drug') != -1 : # let´s try to find a drug and a limit entered by user
-        print("---------", path.find('drug'))
-        drugloc = path.find('drug')  # finds drug location
-        limitloc = path.find('limit')  # finds limit location
-        drug = path[drugloc + 5:limitloc - 1]  # drug entered by client
-        limit = path[limitloc + 6:] # limit entered by client
-        print("The user asked for %s and especified a limit of %s" % (drug, limit))
-        filename = "error.htmal" # this just provisional
-        open_fda(drug, limit)
-        filename = "fda_info_tobesent.html"
+    else:
+        filename = "error.html"
 
     print("File to send: {}".format(filename))
 
