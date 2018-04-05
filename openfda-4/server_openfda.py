@@ -14,7 +14,7 @@ def open_fda(drug, limit):
     headers = {'User-Agent': 'http-client'}
 
     conn = http.client.HTTPSConnection("api.fda.gov")
-    conn.request("GET", "/drug/label.json?search=active_ingredient:%s&limit=%s" % (drug,limit), None, headers)
+    conn.request("GET", "/drug/label.json?search=generic_name:%s&limit=%s" % (drug,limit), None, headers)
     r1 = conn.getresponse()
     print(r1.status, r1.reason)
     repos_raw = r1.read().decode("utf-8")
@@ -29,9 +29,9 @@ def open_fda(drug, limit):
         f.write('<html><head><h1>Here you are:<title>Kwik-E-Mart</title></h1><body style="background-color: yellow">\n<ol>')
         for i in range(len(repos['results'])):
             try:
-                drug = repos['results'][i]["openfda"]["generic_name"][0]
+                drug = repos['results'][i]["openfda"]["brand_name"][0]
                 f.write('\n<li>')
-                f.write(' generic name is: ')
+                f.write(' brand name is: ')
                 f.write(drug)
                 f.write('</li>')  # this will be removed when \n error is fixed
             except KeyError:
