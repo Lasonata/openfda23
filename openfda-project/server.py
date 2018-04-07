@@ -6,7 +6,7 @@ import json
 # Server configuration
 current_ip = "192.168.1.109"
 IP = current_ip # "127.0.0.1" # "10.3.52.67"
-PORT = 8000 # do not changed: teacher especified port to be 8000
+PORT = 8000 # not to be changed: teacher especified port to be 8000
 MAX_OPEN_REQUESTS = 5
 
 # we first define the actions (functions) our server can do:
