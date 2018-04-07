@@ -4,7 +4,7 @@ import http.client
 import json
 
 # Server configuration
-current_ip = "192.168.1.109"
+current_ip = "10.3.52.67"
 IP = current_ip # "127.0.0.1" # 192.168.1.109
 PORT = 9008
 MAX_OPEN_REQUESTS = 5
@@ -26,7 +26,7 @@ def open_fda(drug, limit):
         print("The id is:", repos['results'][i]["id"])
 
     with open("fda_info_tobesent.html", "w") as f:
-        f.write('<html><head><h1>Here you are:<title>Kwik-E-Mart</title></h1><body style="background-color: yellow">\n<ol>')
+        f.write('<html><head><h1>Here you are:<title>Kwik-E-Mart</title></h1><body style="background-color: orange">\n<ol>')
         for i in range(len(repos['results'])):
             try:
                 drug = repos['results'][i]["openfda"]["brand_name"][0]
