@@ -25,7 +25,7 @@ def active_fda(active, limit): # searches for active_ingredient / returns brand 
     repos = json.loads(repos_raw)
 
     with open("fda_info_tobesent.html", "w") as f:
-        f.write('<html><head><h1>Here you are:<title>Kwik-E-Mart</title></h1><body style="background-color: orange">\n<ol>')
+        f.write('<html><head><h1>Here you have at most %s drugs that have %s:<title>Kwik-E-Mart</title></h1><body style="background-color: orange">\n<ol>' %(limit, active) )
         for i in range(len(repos['results'])):
             try:
                 drug = repos['results'][i]["openfda"]["brand_name"][0]
@@ -57,7 +57,7 @@ def manufacturer_fda(manufacturer, limit): # searches for manufacturer_name / re
     repos = json.loads(repos_raw)
 
     with open("fda_info_tobesent.html", "w") as f:
-        f.write('<html><head><h1>Here you are:<title>Kwik-E-Mart</title></h1><body style="background-color: orange">\n<ol>')
+        f.write('<html><head><h1>Here you have at most %s drugs that are produced by %s:<title>Kwik-E-Mart</title></h1><body style="background-color: orange">\n<ol>' %(limit, manufacturer))
         for i in range(len(repos['results'])):
             try:
                 drug = repos['results'][i]["openfda"]["brand_name"][0]
@@ -89,7 +89,7 @@ def drugs_fda(limit): # returns a drug list
     repos = json.loads(repos_raw)
 
     with open("fda_info_tobesent.html", "w") as f:
-        f.write('<html><head><h1>Here you are:<title>Kwik-E-Mart</title></h1><body style="background-color: orange">\n<ol>')
+        f.write('<html><head><h1>Here you have at most %s drugs:<title>Kwik-E-Mart</title></h1><body style="background-color: orange">\n<ol>' %(limit))
         for i in range(len(repos['results'])):
             try:
                 drug = repos['results'][i]["openfda"]["brand_name"][0]
@@ -121,14 +121,18 @@ def manufacturers_fda(limit): # returns a company list
     repos = json.loads(repos_raw)
 
     with open("fda_info_tobesent.html", "w") as f:
-        f.write('<html><head><h1>Here you are:<title>Kwik-E-Mart</title></h1><body style="background-color: orange">\n<ol>')
+        f.write('<html><head><h1>Here you have at most %s companies:<title>Kwik-E-Mart</title></h1><body style="background-color: orange">\n<ol>' % (limit))
         for i in range(len(repos['results'])):
             try:
-                manufacturer = repos['results'][i]["openfda"]["manufacturer_name"]
-                f.write('\n<li>')
-                f.write(' company name is: ')
-                f.write(manufacturer)
-                f.write('</li>')
+                for n in range(len(repos['results'][i]["openfda"]["manufacturer_name"])):
+                    try:
+                        manufacturer = repos['results'][i]["openfda"]["manufacturer_name"][n]
+                        f.write('\n<li>')
+                        f.write(' company name is: ')
+                        f.write(manufacturer)
+                        f.write('</li>')
+                    except KeyError:
+                        break
             except KeyError:
                 f.write('\n<li>')
                 f.write(' company name is: ')
@@ -190,7 +194,7 @@ def process_client(clientsocket):
         except KeyError:
             print("***** some ERROR occurred")
             filename = "error.html"
-    elif path.find('manufacturer') != -1 : # let´s try to find a manufacturer and a limit entered by user
+    elif path.find('manufactorizador') != -1 : # let´s try to find a manufacturer and a limit entered by user
         try:
             print("Client searched for a manufacturer") # this a check point
             manufacturerloc = path.find('manufactorizador')  # finds drug location
