@@ -287,4 +287,4 @@ try:
 
 except socket.error:
     print("Socket error. Problemas with the PORT {}".format(PORT))
-    print("Launch it again in another port (and check the IP)")
+    print("Compruebe IP")
