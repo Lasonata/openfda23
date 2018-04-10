@@ -2,10 +2,11 @@
 import socket
 import http.client
 import json
+import datetime
 
 # Server configuration
-current_ip = "192.168.1.109"
-IP = current_ip # "127.0.0.1" # "10.3.52.67"
+current_ip = "localhost"
+IP = current_ip # "127.0.0.1" # "10.3.52.67" "192.168.1.109"
 PORT = 8000 # not to be changed: teacher especified port to be 8000
 MAX_OPEN_REQUESTS = 5
 
@@ -42,6 +43,45 @@ def active_fda(active, limit): # searches for active_ingredient / returns brand 
         f.write(
             '</ol><h3>Thank you, come again</h3> \n <img src="http://www.konbini.com/en/files/2017/08/apu-feat.jpg" alt="Apu Nahasapeemapetilon"><p><a href="http://%s:%s/">Back to Main Page</a></p></head></html>' %(current_ip, PORT))
         f.close()
+
+def drug_warning(limit):
+    headers = {'User-Agent': 'http-client'}
+
+    conn = http.client.HTTPSConnection("api.fda.gov")
+    conn.request("GET", "/drug/label.json?limit=%s" % (limit), None, headers)
+    r1 = conn.getresponse()
+    print(r1.status, r1.reason)
+    repos_raw = r1.read().decode("utf-8")
+    conn.close()
+
+    repos = json.loads(repos_raw)
+
+    with open("fda_info_tobesent.html", "w") as f:
+        f.write('<html><head><h1>Here you have at most %s warnings:<title>Kwik-E-Mart</title></h1><body style="background-color: orange">\n<ol>' %(limit,))
+        for i in range(len(repos['results'])):
+            try:
+                warning = repos['results'][i]["warnings"][0]
+                f.write('\n<li>')
+                f.write(' warning: ')
+                f.write(warning)
+                f.write('</li>')
+            except KeyError:
+                continue
+                f.write('\n<li>')
+                f.write(' warning: ')
+                f.write('NOT FOUND')
+                f.write('</li>')
+                continue
+        f.write(
+            '</ol><h3>Thank you, come again</h3> \n <img src="http://www.konbini.com/en/files/2017/08/apu-feat.jpg" alt="Apu Nahasapeemapetilon"><p><a href="http://%s:%s/">Back to Main Page</a></p></head></html>' %(current_ip, PORT))
+        f.close()
+
+    for i in range(len(repos['results'])):
+        try:
+            warning = repos['results'][i]["warnings"][0]
+        except KeyError:
+            continue
+
 
 def manufacturer_fda(manufacturer, limit): # searches for manufacturer_name / returns brand_name
 
@@ -229,6 +269,18 @@ def process_client(clientsocket):
         except KeyError:
             print("***** some ERROR occurred")
             filename = "error.html"
+    elif path.find('warninglist') != -1 : # let´s try to find a manufacturer and a limit entered by user
+        try:
+            print("Client searched for a list of warnings") # this a check point
+            limitloc = path.find('limit')  # finds limit location
+            limit = path[limitloc + 6:] # limit entered by client
+            print("Client asked for a warning list and especified a limit of %s" % (limit))
+            drug_warning(limit)
+            filename = "fda_info_tobesent.html"
+        except KeyError:
+            print("***** some ERROR occurred")
+            filename = "error.html"
+
 
     else:
         print("** standard error") # this a check point
@@ -255,7 +307,7 @@ def process_client(clientsocket):
     # -- Busild the message by joining together all the parts
     response_msg = str.encode(status_line + header + "\n" + content)
     clientsocket.send(response_msg)
-
+    print("------------------ Time: ", datetime.datetime.now(), "------------------")
 # -----------------------------------------------
 # ------ The server start its executiong here
 # -----------------------------------------------

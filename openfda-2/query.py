@@ -13,7 +13,7 @@ conn.close()
 repos = json.loads(repos_raw)
 
 
-for i in range(len((repos['results']))):
+for i in range(len(repos['results'])):
     try:
          print("The manufacturers are:", repos['results'][i]["openfda"]["manufacturer_name"])
     except KeyError:

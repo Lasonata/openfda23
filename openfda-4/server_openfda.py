@@ -4,7 +4,7 @@ import http.client
 import json
 
 # Server configuration
-current_ip = "10.3.52.67"
+current_ip = "localhost"
 IP = current_ip # "127.0.0.1" # 192.168.1.109
 PORT = 9008
 MAX_OPEN_REQUESTS = 5
