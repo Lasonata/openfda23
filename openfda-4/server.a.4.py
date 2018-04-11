@@ -36,7 +36,7 @@ class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             repos = json.loads(repos_raw)
 
             with open("fda_info_tobesent.html", "w"):
-                self.wfile.write(bytes('<html><head><h1>Here you are:</h1><body style="background-color: yellow">\n<ol>', "utf8"))
+                self.wfile.write(bytes('<html><head><h1>You searched for %s drugs </h1><body style="background-color: yellow" >\n<ol>' % limit, "utf8"))
 
                 for i in range(len(repos['results'])):
                     try:
