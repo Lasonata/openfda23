@@ -7,7 +7,7 @@ import datetime
 # Server configuration
 current_ip = "localhost"
 IP = current_ip # "127.0.0.1" # "10.3.52.67" "192.168.1.109"
-PORT = 8000 # not to be changed: teacher especified port to be 8000
+PORT = 8001 # not to be changed: teacher especified port to be 8000
 MAX_OPEN_REQUESTS = 5
 
 # we first define the actions (functions) our server can do:
@@ -66,7 +66,6 @@ def drug_warning(limit):
                 f.write(warning)
                 f.write('</li>')
             except KeyError:
-                continue
                 f.write('\n<li>')
                 f.write(' warning: ')
                 f.write('NOT FOUND')
@@ -224,10 +223,8 @@ def process_client(clientsocket):
     elif path.find('active') != -1 : # let´s try to find a drug and a limit entered by user
         try:
             print("Client searched for an active ingredient") # this a check point
-            activeloc = path.find('activo')  # finds drug location
-            limitloc = path.find('limit')  # finds limit location
-            active = path[activeloc + 7:limitloc - 1]  # drug entered by client
-            limit = path[limitloc + 6:] # limit entered by client
+            active = path.split("=")[1].split("&")[0]  # drug entered by client
+            limit = path.split("=")[2] # limit entered by client
             print("Client asked for drugs with %s and especified a limit of %s" % (active, limit))
             active_fda(active, limit)
             filename = "fda_info_tobesent.html"
