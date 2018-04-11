@@ -5,7 +5,7 @@ try:
     import json
 
     # -- IP and the port of the server
-    IP = "192.168.1.109"  # Localhost means "I": your local machine
+    IP = "localhost"  # Localhost means "I": your local machine
     PORT = 9009
 
     # HTTPRequestHandler class
@@ -69,7 +69,7 @@ try:
                 repos = json.loads(repos_raw)
 
                 with open("fda_info_tobesent.html", "w"):
-                    self.wfile.write(bytes('<html><head><h1>You searched for %s drugs containing %s </h1><body style="background-color: yellow" >\n<ol>' % (limit, active), "utf8"))
+                    self.wfile.write(bytes('<html><head><h1>You searched for %s. Here you have %s matches: </h1><body style="background-color: yellow" >\n<ol>' % (active, limit), "utf8"))
 
                     for i in range(len(repos['results'])):
                         try:
@@ -200,10 +200,8 @@ try:
             elif path.find('manufactorizador') != -1:  # let´s try to find a manufacturer and a limit entered by user
                 try:
                     print("Client searched for a manufacturer")  # this a check point
-                    manufacturerloc = path.find('manufactorizador')  # finds drug location
-                    limitloc = path.find('limit')  # finds limit location
-                    manufacter = path[manufacturerloc + 17:limitloc - 1]  # drug entered by client
-                    limit = path[limitloc + 6:]  # limit entered by client
+                    manufacter = path.split("=")[1].split("&")[0] # drug entered by client
+                    limit = path.split("=")[2]  # limit entered by client
                     print("Client asked for drugs produced by %s and especified a limit of %s" % (manufacter, limit))
                     manufacturer_fda(manufacter, limit)
                     filename = "fda_info_tobesent.html"
@@ -213,8 +211,7 @@ try:
             elif path.find('druglist') != -1:  # let´s try to find a manufacturer and a limit entered by user
                 try:
                     print("Client searched for a list of drugs")  # this a check point
-                    limitloc = path.find('limit')  # finds limit location
-                    limit = path[limitloc + 6:]  # limit entered by client
+                    limit = path.split("=")[1].split("&")[0]  # limit entered by client
                     print("Client asked for a drug list and especified a limit of %s" % (limit))
                     drugs_fda(limit)
                     filename = "fda_info_tobesent.html"
@@ -224,8 +221,7 @@ try:
             elif path.find('manufacturerlist') != -1:  # let´s try to find a manufacturer and a limit entered by user
                 try:
                     print("Client searched for a list of manufacturers")  # this a check point
-                    limitloc = path.find('limit')  # finds limit location
-                    limit = path[limitloc + 6:]  # limit entered by client
+                    limit = path.split("=")[1].split("&")[0]  # limit entered by client
                     print("Client asked for a manufacturer list and especified a limit of %s" % (limit))
                     manufacturers_fda(limit)
                     filename = "fda_info_tobesent.html"
@@ -235,8 +231,7 @@ try:
             elif path.find('warninglist') != -1:  # let´s try to find a manufacturer and a limit entered by user
                 try:
                     print("Client searched for a list of warnings")  # this a check point
-                    limitloc = path.find('limit')  # finds limit location
-                    limit = path[limitloc + 6:]  # limit entered by client
+                    limit = path.split("=")[1].split("&")[0]  # limit entered by client
                     print("Client asked for a warning list and especified a limit of %s" % (limit))
                     drug_warning(limit)
                     filename = "fda_info_tobesent.html"
