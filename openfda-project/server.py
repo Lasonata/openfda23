@@ -36,21 +36,20 @@ try:
                 repos = json.loads(repos_raw)
 
                 with open("fda_info_tobesent.html", "w"):
-                    self.wfile.write(bytes(
-                        '<html><head><h1>You searched for %s warnings</h1><body style="background-color: yellow" >\n<ol>' % (limit), "utf8"))
+                    self.wfile.write(bytes('<html><head><h1>Search OpenFDA Application</h1><body style="background-color: yellow" >\n<marquee><h3>listWarnings: You searched for %s warnings</h3></marquee><ol>' % (limit), "utf8"))
 
                 for i in range(len(repos['results'])):
                         try:
                             for n in range(len(repos['results'][i]["openfda"]["brand_name"])):
                                 try:
-                                    warning = "<li>" + "warning is: " + repos['results'][i]["warnings"][0] + "</li>"
+                                    warning = "<li>" + "warning of "+ repos['results'][i]["openfda"]["brand_name"][0] + ":     " + repos['results'][i]["warnings"][0] + "</li>"
                                     self.wfile.write(bytes(warning, "utf8"))
                                 except KeyError:
-                                    warning = "<li>" + "warning is: " + "NOT FOUND" + "</li>"
+                                    warning = "<li>" + "NOT FOUND" + "</li>"
                                     self.wfile.write(bytes(warning, "utf8"))
                                     break
                         except KeyError:
-                            warning = "<li>" + "warning is: " + "NOT FOUND" + "</li>"
+                            warning = "<li>" + "warning : " + "NOT FOUND" + "</li>"
                             self.wfile.write(bytes(warning, "utf8"))
                             continue
                 self.wfile.write(bytes('</ol><h3>Thank you, come again</h3> \n <img src="http://www.konbini.com/en/files/2017/08/apu-feat.jpg" alt="Sad"><p><a href="http://%s:%s/">Back to Main Page</a></p></head></html>' % (IP, PORT), "utf8"))
@@ -69,19 +68,19 @@ try:
                 repos = json.loads(repos_raw)
 
                 with open("fda_info_tobesent.html", "w"):
-                    self.wfile.write(bytes('<html><head><h1>You searched for %s. Here you have %s matches: </h1><body style="background-color: yellow" >\n<ol>' % (active, limit), "utf8"))
+                    self.wfile.write(bytes('<html><head><h1>Search OpenFDA Application</h1><marquee><h3>Active Ingredient: You searched for %s. Here you have %s matches:</h3></marquee><body style="background-color: yellow" >\n<ol>' % (active, limit), "utf8"))
 
                     for i in range(len(repos['results'])):
                         try:
                             for n in range(len(repos['results'][i]["openfda"]["brand_name"])):
                                 try:
-                                    manufacturer = "<li>"+ "brand name is: " + repos['results'][i]["openfda"]["brand_name"][0] + "</li>"
-                                    self.wfile.write(bytes(manufacturer, "utf8"))
+                                    drug = "<li>"+ "brand name is: " + repos['results'][i]["openfda"]["brand_name"][0] + "</li>"
+                                    self.wfile.write(bytes(drug, "utf8"))
                                 except KeyError:
                                     break
                         except KeyError:
-                            manufacturer = "<li>" + "brand name is: " + "NOT FOUND" + "</li>"
-                            self.wfile.write(bytes(manufacturer, "utf8"))
+                            drug = "<li>" + "brand name is: " + "NOT FOUND" + "</li>"
+                            self.wfile.write(bytes(drug, "utf8"))
                             continue
                     self.wfile.write(bytes('</ol><h3>Thank you, come again</h3> \n <img src="http://www.konbini.com/en/files/2017/08/apu-feat.jpg" alt="Sad"><p><a href="http://%s:%s/">Back to Main Page</a></p></head></html>' % (IP, PORT), "utf8"))
 
@@ -99,7 +98,7 @@ try:
                 repos = json.loads(repos_raw)
 
                 with open("fda_info_tobesent.html", "w"):
-                    self.wfile.write(bytes('<html><head><h1>You searched for %s drugs produced by %s </h1><body style="background-color: yellow" >\n<ol>' % (limit, manufacturer), "utf8"))
+                    self.wfile.write(bytes('<html><head><h1>Search OpenFDA Application</h1><marquee><h3>Company: You searched for %s drugs produced by %s</h3></marquee><body style="background-color: yellow" >\n<ol>' % (limit, manufacturer), "utf8"))
 
                     for i in range(len(repos['results'])):
                         try:
@@ -129,7 +128,7 @@ try:
                 repos = json.loads(repos_raw)
 
                 with open("fda_info_tobesent.html", "w"):
-                    self.wfile.write(bytes('<html><head><h1>You searched for %s drugs</h1><body style="background-color: yellow" >\n<ol>' % (limit), "utf8"))
+                    self.wfile.write(bytes('<html><head><h1>Search OpenFDA Application</h1><marquee><h3>listDrug: You searched for %s drugs</h3></marquee><body style="background-color: yellow" >\n<ol>' % (limit), "utf8"))
 
                     for i in range(len(repos['results'])):
                         try:
@@ -160,7 +159,7 @@ try:
                 repos = json.loads(repos_raw)
 
                 with open("fda_info_tobesent.html", "w"):
-                    self.wfile.write(bytes('<html><head><h1>You searched for %s companies</h1><body style="background-color: yellow" >\n<ol>' % (limit), "utf8"))
+                    self.wfile.write(bytes('<html><head><h1>Search OpenFDA Application</h1><marquee><h3>listCompanies: You searched %s companies</h3></marquee><body style="background-color: yellow" >\n<ol>' % (limit), "utf8"))
 
                     for i in range(len(repos['results'])):
                         try:
