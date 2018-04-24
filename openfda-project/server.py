@@ -6,11 +6,125 @@ import json
 # -- IP and the port of the server
 IP = "localhost"  # Localhost means "I": your local machine
 PORT = 8000
+socketserver.TCPServer.allow_reuse_adress = True
 
 # HTTPRequestHandler class
+class OpenFDAClient():
+# include the logic to communicate with the OpenFDA remote API
+
+    def send_query(self, request_ending): # useful to obtain a jsonlist
+        # send a query (implemented by request_ending) and returns the data obtained from the search
+        request_default = "/drug/label.json"
+        full_query = request_default + '?' + request_ending
+
+        headers = {'User-Agent': 'http-client'}
+
+        conn = http.client.HTTPSConnection("api.fda.gov")
+        conn.request("GET", full_query, None, headers)
+        r1 = conn.getresponse()
+        print(r1.status, r1.reason)
+        repos_raw = r1.read().decode("utf-8")
+        conn.close()
+
+        repos = json.loads(repos_raw)
+        return repos
+
+    def list_drugs(self, limit = 10): # useful for drug_list, warning_list, company_list (just limit paremeter os requiered)
+        # implements request by adding a limit parameter and call send_request to obtain the corresponding Json list
+        request_ending = "limit=%s" % (limit)
+        json_list = self.send_query(request_ending)
+        print('_____json list has been returned: parameters: limit = %s______' % limit)
+        return json_list
+
+    def search_drugs(self, active, limit = 10): # useful for active_ingredient
+        # implements request by adding an active_ingredient and a limit parameter to obtain the corresponding Json list
+        request_ending = "search=active_ingredient:%s&limit=%s" % (active, limit)
+        json_list = self.send_query(request_ending)
+        print('_____json list has been returned: parameters: active = %s , limit = %s ______' % (active, limit))
+        return json_list
+
+    def search_companies(self, manufacturer, limit = 10):  # searches for manufacturer_name / returns brand_name
+        # implements request by adding a manufacturer_name and limit parameter to obtain the corresponding Json list
+        request_ending = "search=openfda.manufacturer_name:%s&limit=%s" % (manufacturer, limit)
+        json_list = self.send_query(request_ending)
+        print('_____json list has been returned: parameters: manufacturer = %s , limit = %s ______' % (manufacturer, limit))
+        return json_list
+
+
+class OpenFDAParser():
+# includes the logic to extract the data from drugs items
+    def parse_drugs(self, json_list): # useful in active_ingredients, manufacturer_list
+        # called to return a list containing brand_names:
+        brand_list = []
+        for i in range(len(json_list['results'])):
+            try:
+                for n in range(len(json_list['results'][i]["openfda"]["brand_name"])):
+                    try:
+                        brand_list.append(json_list['results'][i]["openfda"]["brand_name"][0])
+                    except KeyError:
+                        brand_list.append("Unknown")
+                        break
+            except KeyError:
+                brand_list.append("Unknown")
+                continue
+        return brand_list
+
+    def parse_warnings(self, json_list): # useful for warning_list
+    # called to return a list containing warnings
+        warning_list = []
+        for i in range(len(json_list['results'])):
+            try:
+                for n in range(len(json_list['results'][i]["openfda"]["brand_name"])):
+                    try:
+                        warning_list.append(json_list['results'][i]["warnings"][0])
+                    except KeyError:
+                        warning_list.append("Unknown")
+                        break
+            except KeyError:
+                warning_list.append("Unknown")
+                continue
+        return warning_list
+
+    def parse_companies(self, json_list): # useful for manufacturer_list
+        # called to return a list containing manufacturers
+        manufacturer_list = []
+        for i in range(len(json_list['results'])):
+            try:
+                for n in range(len(json_list['results'][i]["openfda"]["manufacturer_name"])):
+                    try:
+                        manufacturer_list.append(json_list['results'][i]["openfda"]["manufacturer_name"][0])
+                    except KeyError:
+                        manufacturer_list.append("Unknown")
+                        break
+            except KeyError:
+                manufacturer_list.append("Unknown")
+                continue
+        return manufacturer_list
+
+class OpenFDAHTML():
+    def create_html(self, json_list): # useful for all
+        # takes in a jasonlist and writes element by element in an html file
+        html_file = "<ul>"
+        for elem in json_list:
+            html_file += "<li>" + elem + "</li>"
+        html_file += "</ul>"
+        print("html file has been built")
+        return html_file
+
+    def send_file(self, file):
+        with open(file, "r") as f:
+            content = f.read()
+        print(file, "is to be sent")
+        return content
+
 class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     # GET
     def do_GET(self):
+
+        # let's create three instances
+        client = OpenFDAClient()
+        parser = OpenFDAParser
+        html = OpenFDAHTML
 
         # Send response status code
         self.send_response(200)
@@ -18,237 +132,90 @@ class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html')
         self.end_headers()
 
-        def send_file(file_name): # call to enter a filename to be opened
-            with open(file_name) as f:
-                message = f.read()
-            self.wfile.write(bytes(message, "utf8"))
-
-        def drug_warning(limit):
-            headers = {'User-Agent': 'http-client'}
-
-            conn = http.client.HTTPSConnection("api.fda.gov")
-            conn.request("GET", "/drug/label.json?limit=%s" % (limit), None, headers)
-            r1 = conn.getresponse()
-            print(r1.status, r1.reason)
-            repos_raw = r1.read().decode("utf-8")
-            conn.close()
-
-            repos = json.loads(repos_raw)
-
-            with open("fda_info_tobesent.html", "w"):
-                self.wfile.write(bytes('<html><head><h1>Search OpenFDA Application</h1><body style="background-color: yellow" >\n<marquee><h3>listWarnings: You searched for %s warnings</h3></marquee><ol>' % (limit), "utf8"))
-
-            for i in range(len(repos['results'])):
-                    try:
-                        for n in range(len(repos['results'][i]["openfda"]["brand_name"])):
-                            try:
-                                warning = "<li>" + "warning of "+ repos['results'][i]["openfda"]["brand_name"][0] + ":     " + repos['results'][i]["warnings"][0] + "</li>"
-                                self.wfile.write(bytes(warning, "utf8"))
-                            except KeyError:
-                                warning = "<li>" + "NOT FOUND" + "</li>"
-                                self.wfile.write(bytes(warning, "utf8"))
-                                break
-                    except KeyError:
-                        warning = "<li>" + "warning : " + "NOT FOUND" + "</li>"
-                        self.wfile.write(bytes(warning, "utf8"))
-                        continue
-            self.wfile.write(bytes('</ol><h3>Thank you, come again</h3> \n <img src="http://www.konbini.com/en/files/2017/08/apu-feat.jpg" alt="Sad"><p><a href="http://%s:%s/">Back to Main Page</a></p></head></html>' % (IP, PORT), "utf8"))
-
-        def active_fda(active, limit): # called to search for a drug and a limit
-
-            headers = {'User-Agent': 'http-client'}
-
-            conn = http.client.HTTPSConnection("api.fda.gov")
-            conn.request("GET", "/drug/label.json?search=active_ingredient:%s&limit=%s" % (active, limit), None, headers)
-            r1 = conn.getresponse()
-            print(r1.status, r1.reason)
-            repos_raw = r1.read().decode("utf-8")
-            conn.close()
-
-            repos = json.loads(repos_raw)
-
-            with open("fda_info_tobesent.html", "w"):
-                self.wfile.write(bytes('<html><head><h1>Search OpenFDA Application</h1><marquee><h3>Active Ingredient: You searched for %s. Here you have %s matches:</h3></marquee><body style="background-color: yellow" >\n<ol>' % (active, limit), "utf8"))
-
-                for i in range(len(repos['results'])):
-                    try:
-                        for n in range(len(repos['results'][i]["openfda"]["brand_name"])):
-                            try:
-                                drug = "<li>"+ "brand name is: " + repos['results'][i]["openfda"]["brand_name"][0] + "</li>"
-                                self.wfile.write(bytes(drug, "utf8"))
-                            except KeyError:
-                                break
-                    except KeyError:
-                        drug = "<li>" + "brand name is: " + "NOT FOUND" + "</li>"
-                        self.wfile.write(bytes(drug, "utf8"))
-                        continue
-                self.wfile.write(bytes('</ol><h3>Thank you, come again</h3> \n <img src="http://www.konbini.com/en/files/2017/08/apu-feat.jpg" alt="Sad"><p><a href="http://%s:%s/">Back to Main Page</a></p></head></html>' % (IP, PORT), "utf8"))
-
-        def manufacturer_fda(manufacturer, limit):  # searches for manufacturer_name / returns brand_name
-
-            headers = {'User-Agent': 'http-client'}
-
-            conn = http.client.HTTPSConnection("api.fda.gov")
-            conn.request("GET", "/drug/label.json?search=openfda.manufacturer_name:%s&limit=%s" % (manufacturer, limit), None, headers)
-            r1 = conn.getresponse()
-            print(r1.status, r1.reason)
-            repos_raw = r1.read().decode("utf-8")
-            conn.close()
-
-            repos = json.loads(repos_raw)
-
-            with open("fda_info_tobesent.html", "w"):
-                self.wfile.write(bytes('<html><head><h1>Search OpenFDA Application</h1><marquee><h3>Company: You searched for %s drugs produced by %s</h3></marquee><body style="background-color: yellow" >\n<ol>' % (limit, manufacturer), "utf8"))
-
-                for i in range(len(repos['results'])):
-                    try:
-                        for n in range(len(repos['results'][i]["openfda"]["brand_name"])):
-                            try:
-                                manufacturer = "<li>"+ "brand name is: " + repos['results'][i]["openfda"]["brand_name"][0] + "</li>"
-                                self.wfile.write(bytes(manufacturer, "utf8"))
-                            except KeyError:
-                                break
-                    except KeyError:
-                        manufacturer = "<li>" + "brand name is: " + "NOT FOUND" + "</li>"
-                        self.wfile.write(bytes(manufacturer, "utf8"))
-                        continue
-                self.wfile.write(bytes('</ol><h3>Thank you, come again</h3> \n <img src="http://www.konbini.com/en/files/2017/08/apu-feat.jpg" alt="Sad"><p><a href="http://%s:%s/">Back to Main Page</a></p></head></html>' % (IP, PORT), "utf8"))
-
-        def drugs_fda(limit):  # returns a drug list
-
-            headers = {'User-Agent': 'http-client'}
-
-            conn = http.client.HTTPSConnection("api.fda.gov")
-            conn.request("GET", "/drug/label.json?limit=%s" % (limit), None, headers)
-            r1 = conn.getresponse()
-            print(r1.status, r1.reason)
-            repos_raw = r1.read().decode("utf-8")
-            conn.close()
-
-            repos = json.loads(repos_raw)
-
-            with open("fda_info_tobesent.html", "w"):
-                self.wfile.write(bytes('<html><head><h1>Search OpenFDA Application</h1><marquee><h3>listDrug: You searched for %s drugs</h3></marquee><body style="background-color: yellow" >\n<ol>' % (limit), "utf8"))
-
-                for i in range(len(repos['results'])):
-                    try:
-                        for n in range(len(repos['results'][i]["openfda"]["brand_name"])):
-                            try:
-                                drug = "<li>"+ "brand name is: " + repos['results'][i]["openfda"]["brand_name"][0] + "</li>"
-                                self.wfile.write(bytes(drug, "utf8"))
-                            except KeyError:
-                                break
-                    except KeyError:
-                        drug = "<li>" + "brand name is: " + 'NOT FOUND' + "</li>"
-                        self.wfile.write(bytes(drug, "utf8"))
-                        continue
-                self.wfile.write(bytes('</ol><h3>Thank you, come again</h3> \n <img src="http://www.konbini.com/en/files/2017/08/apu-feat.jpg" alt="Sad"><p><a href="http://%s:%s/">Back to Main Page</a></p></head></html>' % (IP, PORT), "utf8"))
-
-
-        def manufacturers_fda(limit):  # returns a company list
-
-            headers = {'User-Agent': 'http-client'}
-
-            conn = http.client.HTTPSConnection("api.fda.gov")
-            conn.request("GET", "/drug/label.json?limit=%s" % (limit), None, headers)
-            r1 = conn.getresponse()
-            print(r1.status, r1.reason)
-            repos_raw = r1.read().decode("utf-8")
-            conn.close()
-
-            repos = json.loads(repos_raw)
-
-            with open("fda_info_tobesent.html", "w"):
-                self.wfile.write(bytes('<html><head><h1>Search OpenFDA Application</h1><marquee><h3>listDrug: You searched for %s companies</h3></marquee><body style="background-color: yellow" >\n<ol>' % (limit), "utf8"))
-
-                for i in range(len(repos['results'])):
-                    try:
-                        for n in range(len(repos['results'][i]["openfda"]["manufacturer_name"])):
-                            try:
-                                company = "<li>"+ "company name is: " + repos['results'][i]["openfda"]["manufacturer_name"][0] + "</li>"
-                                self.wfile.write(bytes(company, "utf8"))
-                            except KeyError:
-                                break
-                    except KeyError:
-                        company = "<li>" + "company name is: " + 'NOT FOUND' + "</li>"
-                        self.wfile.write(bytes(company, "utf8"))
-                        continue
-
-
-            self.wfile.write(bytes('</ol><h3>Thank you, come again</h3> \n <img src="http://www.konbini.com/en/files/2017/08/apu-feat.jpg" alt="Sad"><p><a href="http://%s:%s/">Back to Main Page</a></p></head></html>' % (IP, PORT), "utf8"))
-
         path = self.path
-
         if path != "/favicon.ico":
-            print("PATH: path introduced by client:", path)
+            print("_____path is: %s_____" % path)
 
         if path == "/":
+        # default
             print("SEARCH: client entered default search web")
-            filename = "search.html"
+            send_content = html.send_file(self, "search.html")
 
-        elif path.find('searchDrug') != -1:  # let´s try to find a drug and a limit entered by user
+        elif path.find('searchDrug') != -1:
+        # input = active_ingredient // output = drugs with such active_ingredient
             try:
                 print("SEARCHED: client has attemped to make a request")
-                active = path.split("=")[1].split("&")[0]  # drug entered by client
-                limit = path.split("=")[2]  # limit entered by client
+                active = path.split("=")[1].split("&")[0]
+                limit = path.split("=")[2]
                 print("REQUEST: Client asked for drugs with %s and especified a limit of %s" % (active, limit))
-                active_fda(active, limit)
-                print("SUCCESS: Client has succesfully made a request")
-                filename = "fda_info_tobesent.html"
+                json_list = client.search_drugs(active, limit) # getting Json data
+                drugs_list = parser.parse_drugs(self, json_list) # getting a list of drugs
+                send_content = html.create_html(self, drugs_list) # writing down list in an html file
+                print("SUCCESS: Client has successfully made a request")
             except KeyError:
                 print("BAD REQUEST: client has failed to make a request")
-                filename = "error.html"
-        elif path.find('searchCompany') != -1:  # let´s try to find a manufacturer and a limit entered by user
+                send_content = html.send_file(self, "error.html")
+        elif path.find('searchCompany') != -1:
+        # input = manufacturer and a limit // output = drugs produced by such company
             try:
-                print("SEARCHED: Client searched for a manufacturer")  # this a check point
-                manufacter = path.split("=")[1].split("&")[0] # drug entered by client
-                limit = path.split("=")[2]  # limit entered by client
+                print("SEARCHED: client has attemped to make a request")
+                manufacter = path.split("=")[1].split("&")[0]
+                limit = path.split("=")[2]
                 print("REQUEST: Client asked for drugs produced by %s and especified a limit of %s" % (manufacter, limit))
-                manufacturer_fda(manufacter, limit)
-                filename = "fda_info_tobesent.html"
+                json_list = client.search_companies(manufacter, limit)
+                drugs_list = parser.parse_companies(self, json_list)
+                print(drugs_list)
+                send_content = html.create_html(self, drugs_list)
+                print("SUCCESS: Client has successfully made a request")
             except KeyError:
                 print("BAD REQUEST: client has failed to make a request")
-                filename = "error.html"
-        elif path.find('listDrugs') != -1:  # let´s try to find a manufacturer and a limit entered by user
+                send_content = html.send_file(self, "error.html")
+        elif path.find('listDrugs') != -1:
+        # input = limit // output = list of drugs
             try:
-                print("Client searched for a list of drugs")  # this a check point
-                limit = path.split("=")[1].split("&")[0]  # limit entered by client
+                print("SEARCHED: client has attemped to make a request")
+                limit = path.split("=")[1].split("&")[0]
                 print("Client asked for a drug list and specified a limit of %s" % (limit))
-                drugs_fda(limit)
-                filename = "fda_info_tobesent.html"
+                json_list = client.list_drugs(limit)
+                drugs_list = parser.parse_drugs(self, json_list)
+                send_content = html.create_html(self, drugs_list)
+                print("SUCCESS: Client has successfully made a request")
             except KeyError:
-                print("***** some ERROR occurred")
-                filename = "error.html"
-        elif path.find('listCompanies') != -1:  # let´s try to find a manufacturer and a limit entered by user
+                print("BAD REQUEST: client has failed to make a request")
+                send_content = html.send_file(self, "error.html")
+        elif path.find('listCompanies') != -1:
+        # input = limit // output = list of companies
             try:
-                print("Client searched for a list of manufacturers")  # this a check point
-                limit = path.split("=")[1].split("&")[0]  # limit entered by client
+                print("SEARCHED: client has attemped to make a request")
+                limit = path.split("=")[1].split("&")[0]
                 print("Client asked for a manufacturer list and especified a limit of %s" % (limit))
-                manufacturers_fda(limit)
-                filename = "fda_info_tobesent.html"
+                json_list = client.list_drugs(limit)
+                drugs_list = parser.parse_companies(self, json_list)
+                send_content = html.create_html(self, drugs_list)
+                print("SUCCESS: Client has successfully made a request")
             except KeyError:
-                print("***** some ERROR occurred")
-                filename = "error.html"
+                print("BAD REQUEST: client has failed to make a request")
+                send_content = html.send_file(self, "error.html")
         elif path.find('listWarnings') != -1:  # let´s try to find a manufacturer and a limit entered by user
             try:
-                print("Client searched for a list of warnings")  # this a check point
-                limit = path.split("=")[1].split("&")[0]  # limit entered by client
+                print("SEARCHED: client has attemped to make a request")
+                limit = path.split("=")[1].split("&")[0]
                 print("Client asked for a warning list and especified a limit of %s" % (limit))
-                drug_warning(limit)
-                filename = "fda_info_tobesent.html"
+                json_list = client.list_drugs(limit)
+                drugs_list = parser.parse_companies(self, json_list)
+                send_content = html.create_html(self, drugs_list)
+                print("SUCCESS: Client has successfully made a request")
             except KeyError:
-                print("***** some ERROR occurred")
-                filename = "error.html"
+                print("BAD REQUEST: client has failed to make a request")
+                send_content = html.send_file(self, "error.html")
         else:
             if path != "/favicon.ico":
-                print("***** ERROR: standard error")
-            filename = "error.html"
-            # Send message back to client
-
+                print("* * ERROR * * : standard error: wrong path")
+                send_content = html.send_file(self, "error.html")
+        # Send message back to client
         if path != "/favicon.ico":
-            send_file(filename)
-            print("SERVED: File <<%s>> has been sent!" % filename)
-            return
+            self.wfile.write(bytes(send_content, "utf8"))
+            print("SERVED: File has been sent!")
 
 
 # Handler = http.server.SimpleHTTPRequestHandler
