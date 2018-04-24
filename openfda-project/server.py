@@ -108,6 +108,7 @@ class OpenFDAHTML():
         for elem in json_list:
             html_file += "<li>" + elem + "</li>"
         html_file += "</ul>"
+        html_file += "<marquee>powered by Lasonata</marquee>"
         print("html file has been built")
         return html_file
 
