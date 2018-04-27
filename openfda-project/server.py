@@ -102,6 +102,7 @@ class OpenFDAParser():
         return manufacturer_list
 
 class OpenFDAHTML():
+
     def create_html(self, json_list): # useful for all
         # takes in a jasonlist and writes element by element in an html file
         html_file = "<ul>"
@@ -127,12 +128,7 @@ class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         parser = OpenFDAParser
         html = OpenFDAHTML
 
-        # Send response status code
-        self.send_response(200)
-        # Send headers
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
-
+        code = False # unless told otherwise # will send error.html
         path = self.path
         if path != "/favicon.ico":
             print("_____path is: %s_____" % path)
@@ -140,79 +136,113 @@ class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         if path == "/":
         # default
             print("SEARCH: client entered default search web")
-            send_content = html.send_file(self, "search.html")
+            code = "start"
 
         elif path.find('searchDrug') != -1:
         # input = active_ingredient // output = drugs with such active_ingredient
             try:
                 print("SEARCHED: client has attemped to make a request")
                 active = path.split("=")[1].split("&")[0]
-                limit = path.split("=")[2]
-                print("REQUEST: Client asked for drugs with %s and especified a limit of %s" % (active, limit))
+                try:
+                    limit = path.split("=")[2]
+                except IndexError:
+                    limit = 10
+                print("REQUEST: Client asked for drugs with %s and specified a limit of %s" % (active, limit))
                 json_list = client.search_drugs(active, limit) # getting Json data
-                drugs_list = parser.parse_drugs(self, json_list) # getting a list of drugs
-                send_content = html.create_html(self, drugs_list) # writing down list in an html file
+                content = parser.parse_drugs(self, json_list) # getting a list of drugs
+                code = True
                 print("SUCCESS: Client has successfully made a request")
             except KeyError:
                 print("BAD REQUEST: client has failed to make a request")
-                send_content = html.send_file(self, "error.html")
         elif path.find('searchCompany') != -1:
         # input = manufacturer and a limit // output = drugs produced by such company
             try:
                 print("SEARCHED: client has attemped to make a request")
                 manufacter = path.split("=")[1].split("&")[0]
-                limit = path.split("=")[2]
+                try:
+                    limit = path.split("=")[2]
+                except IndexError:
+                    limit = 10
                 print("REQUEST: Client asked for drugs produced by %s and especified a limit of %s" % (manufacter, limit))
                 json_list = client.search_companies(manufacter, limit)
-                drugs_list = parser.parse_companies(self, json_list)
-                print(drugs_list)
-                send_content = html.create_html(self, drugs_list)
+                content = parser.parse_drugs(self, json_list)
+                code = True
                 print("SUCCESS: Client has successfully made a request")
             except KeyError:
                 print("BAD REQUEST: client has failed to make a request")
-                send_content = html.send_file(self, "error.html")
         elif path.find('listDrugs') != -1:
         # input = limit // output = list of drugs
             try:
                 print("SEARCHED: client has attemped to make a request")
-                limit = path.split("=")[1].split("&")[0]
+                try:
+                    limit = path.split("=")[1]
+                except IndexError:
+                    limit = 10
                 print("Client asked for a drug list and specified a limit of %s" % (limit))
                 json_list = client.list_drugs(limit)
-                drugs_list = parser.parse_drugs(self, json_list)
-                send_content = html.create_html(self, drugs_list)
+                content = parser.parse_drugs(self, json_list)
+                code = True
                 print("SUCCESS: Client has successfully made a request")
             except KeyError:
                 print("BAD REQUEST: client has failed to make a request")
-                send_content = html.send_file(self, "error.html")
         elif path.find('listCompanies') != -1:
         # input = limit // output = list of companies
             try:
                 print("SEARCHED: client has attemped to make a request")
-                limit = path.split("=")[1].split("&")[0]
+                try:
+                    limit = path.split("=")[1]
+                except IndexError:
+                    limit = 10
                 print("Client asked for a manufacturer list and especified a limit of %s" % (limit))
                 json_list = client.list_drugs(limit)
-                drugs_list = parser.parse_companies(self, json_list)
-                send_content = html.create_html(self, drugs_list)
+                content = parser.parse_companies(self, json_list)
+                code = True
                 print("SUCCESS: Client has successfully made a request")
             except KeyError:
                 print("BAD REQUEST: client has failed to make a request")
-                send_content = html.send_file(self, "error.html")
         elif path.find('listWarnings') != -1:  # let´s try to find a manufacturer and a limit entered by user
             try:
                 print("SEARCHED: client has attemped to make a request")
-                limit = path.split("=")[1].split("&")[0]
+                try:
+                    limit = path.split("=")[1]
+                except IndexError:
+                    limit = 10
                 print("Client asked for a warning list and especified a limit of %s" % (limit))
                 json_list = client.list_drugs(limit)
-                drugs_list = parser.parse_companies(self, json_list)
-                send_content = html.create_html(self, drugs_list)
+                content = parser.parse_companies(self, json_list)
+                code = True
                 print("SUCCESS: Client has successfully made a request")
             except KeyError:
                 print("BAD REQUEST: client has failed to make a request")
-                send_content = html.send_file(self, "error.html")
         else:
             if path != "/favicon.ico":
                 print("* * ERROR * * : standard error: wrong path")
-                send_content = html.send_file(self, "error.html")
+                code = False
+
+        # let´s send the appropriate header
+        if code:
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            if code == "start":
+                send_content = html.send_file(self, "search.html")
+            else:
+                send_content = html.create_html(self, content) # writing down list in an html file
+        elif "secret" in path:
+            self.send_response(401)
+            self.send_header("WWW-Authenticate", "Basic realm='OpenFDA Private Zone")
+            self.end_headers()
+
+        elif "redirect" in path:
+            self.send_response(302)
+            self.send_header('Location', 'http://localhost:8000/')
+            self.end_headers()
+        else:
+            self.send_response(404)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            send_content = html.send_file(self, "error.html")
+
         # Send message back to client
         if path != "/favicon.ico":
             self.wfile.write(bytes(send_content, "utf8"))
