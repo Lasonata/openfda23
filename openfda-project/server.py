@@ -249,7 +249,7 @@ class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             print("SERVED: File has been sent!")
 
 
-# Handler = http.server.SimpleHTTPRequestH andler
+# Handler = http.server.SimpleHTTPRequestH andler # author: Lasonata
 Handler = testHTTPRequestHandler
 
 httpd = socketserver.TCPServer((IP, PORT), Handler)
