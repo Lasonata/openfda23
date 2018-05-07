@@ -33,21 +33,21 @@ class OpenFDAClient():
         # implements request by adding a limit parameter and call send_request to obtain the corresponding Json list
         request_ending = "limit=%s" % (limit)
         json_list = self.send_query(request_ending)
-        print('_____json list has been returned: parameters: limit = %s______' % limit)
+        print('json list has been returned: parameters: limit = %s' % limit)
         return json_list
 
     def search_drugs(self, active, limit = 10): # useful for active_ingredient
         # implements request by adding an active_ingredient and a limit parameter to obtain the corresponding Json list
         request_ending = "search=active_ingredient:%s&limit=%s" % (active, limit)
         json_list = self.send_query(request_ending)
-        print('_____json list has been returned: parameters: active = %s , limit = %s ______' % (active, limit))
+        print('json list has been returned: parameters: active = %s , limit = %s' % (active, limit))
         return json_list
 
     def search_companies(self, manufacturer, limit = 10):  # searches for manufacturer_name / returns brand_name
         # implements request by adding a manufacturer_name and limit parameter to obtain the corresponding Json list
         request_ending = "search=openfda.manufacturer_name:%s&limit=%s" % (manufacturer, limit)
         json_list = self.send_query(request_ending)
-        print('_____json list has been returned: parameters: manufacturer = %s , limit = %s ______' % (manufacturer, limit))
+        print('json list has been returned: parameters: manufacturer = %s , limit = %s' % (manufacturer, limit))
         return json_list
 
 
@@ -249,7 +249,7 @@ class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             print("SERVED: File has been sent!")
 
 
-# Handler = http.server.SimpleHTTPRequestHandler
+# Handler = http.server.SimpleHTTPRequestH andler
 Handler = testHTTPRequestHandler
 
 httpd = socketserver.TCPServer((IP, PORT), Handler)
